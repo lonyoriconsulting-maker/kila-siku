@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1520">
+<title>Kila Siku — Daily Cyber Drip</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  :root{
+    --bg:#0F1520;
+    --surface:#161F2E;
+    --surface-2:#1C273A;
+    --line:#2A3648;
+    --text:#E8E6DE;
+    --muted:#7C889C;
+    --amber:#D4A24C;
+    --cyan:#4FD1C5;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Consolas, "Roboto Mono", monospace;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%; background:var(--bg);}
+  body{
+    font-family: var(--mono);
+    color:var(--text);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+    padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  }
+  .wrap{ width:100%; max-width:520px; }
+
+  /* top bar */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:12px; color:var(--muted); letter-spacing:.03em;
+    padding: 2px 4px 14px;
+  }
+  .topbar .prompt{ color:var(--cyan); }
+  .topbar .prompt::after{ content:"_"; animation: blink 1.1s step-end infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .streak{ color:var(--amber); }
+
+  /* card */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px 20px 18px;
+    margin-bottom:14px;
+    opacity:0; transform: translateY(6px);
+    animation: rise .5s ease forwards;
+  }
+  .card + .card{ animation-delay:.08s; }
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){
+    .card{ animation:none; opacity:1; transform:none; }
+    .topbar .prompt::after{ animation:none; }
+  }
+
+  .eyebrow{
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--amber); margin-bottom:8px;
+  }
+  h1{ font-size:19px; line-height:1.35; margin:0 0 12px; font-weight:600; }
+  p{ margin:0; font-size:14.5px; line-height:1.65; color:#D6D3C9; }
+
+  .divider{
+    border:none; border-top:1px dashed var(--line);
+    margin:16px 0;
+  }
+
+  .qa-toggle{
+    width:100%; text-align:left; background:var(--surface-2);
+    border:1px solid var(--line); border-radius:8px; color:var(--cyan);
+    font-family:var(--mono); font-size:13px; padding:12px 14px;
+    cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+  }
+  .qa-toggle:focus-visible, .drill-toggle:focus-visible, .btn:focus-visible{
+    outline:2px solid var(--cyan); outline-offset:2px;
+  }
+  .qa-toggle .chev{ transition: transform .2s ease; }
+  .qa-toggle[aria-expanded="true"] .chev{ transform: rotate(90deg); }
+  .qa-body{
+    display:none; padding:14px 2px 2px; font-size:14px; line-height:1.6; color:#CFCCC1;
+  }
+  .qa-body.open{ display:block; }
+  .qa-body .label{ color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:6px; }
+  .qa-body .answer{ margin-top:14px; }
+
+  .drill-toggle{
+    margin-top:10px; background:none; border:1px dashed var(--line); color:var(--muted);
+    font-family:var(--mono); font-size:12.5px; padding:9px 12px; border-radius:8px;
+    width:100%; text-align:left; cursor:pointer;
+  }
+  .drill-body{ display:none; font-size:13.5px; line-height:1.6; color:#CFCCC1; padding:10px 2px 0; }
+  .drill-body.open{ display:block; }
+
+  .module-tag{
+    display:inline-block; font-size:10.5px; color:var(--muted);
+    border:1px solid var(--line); border-radius:100px; padding:3px 9px;
+    margin-bottom:10px;
+  }
+
+  footer{
+    margin-top:auto; padding-top:18px; font-size:11px; color:#4B5568; text-align:center;
+  }
+
+  .install-hint{
+    font-size:12px; color:var(--muted); text-align:center; margin-top:8px;
+    display:none;
+  }
+  .install-hint.show{ display:block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <span class="prompt">kila-siku:~$</span>
+    <span id="streakLabel" class="streak">day 001</span>
+  </div>
+
+  <div class="card">
+    <span id="moduleTag" class="module-tag"></span>
+    <div class="eyebrow">Today's drip</div>
+    <h1 id="title"></h1>
+    <p id="concept"></p>
+  </div>
+
+  <div class="card">
+    <button class="qa-toggle" id="qaToggle" aria-expanded="false">
+      <span>Interview question</span>
+      <span class="chev">›</span>
+    </button>
+    <div class="qa-body" id="qaBody">
+      <span class="label">Question</span>
+      <p id="qText"></p>
+      <div class="answer">
+        <span class="label">Model answer</span>
+        <p id="aText"></p>
+      </div>
+    </div>
+
+    <div id="drillWrap">
+      <button class="drill-toggle" id="drillToggle">$ optional drill — tap if you've got a minute more</button>
+      <div class="drill-body" id="drillBody"></div>
+    </div>
+  </div>
+
+  <footer id="footerNote">Kila Siku · one drip a day · works offline</footer>
+</div>
+
+<script src="content.js"></script>
+<script>
+  // ---- pick today's drip (deterministic by date, so it doesn't shift on reopen) ----
+  const dayEpoch = Math.floor(Date.now() / 86400000);
+  const idx = ((dayEpoch % DRIPS.length) + DRIPS.length) % DRIPS.length;
+  const drip = DRIPS[idx];
+
+  document.getElementById("moduleTag").textContent = drip.module;
+  document.getElementById("title").textContent = drip.title;
+  document.getElementById("concept").textContent = drip.concept;
+  document.getElementById("qText").textContent = drip.q;
+  document.getElementById("aText").textContent = drip.a;
+
+  if (drip.drill) {
+    document.getElementById("drillBody").textContent = drip.drill;
+  } else {
+    document.getElementById("drillWrap").style.display = "none";
+  }
+
+  // ---- streak tracking ----
+  (function trackStreak(){
+    const todayKey = new Date().toDateString();
+    const last = localStorage.getItem("ks_last_visit");
+    let streak = parseInt(localStorage.getItem("ks_streak") || "0", 10);
+
+    if (last !== todayKey) {
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      streak = (last === yesterday) ? streak + 1 : 1;
+      localStorage.setItem("ks_streak", String(streak));
+      localStorage.setItem("ks_last_visit", todayKey);
+    } else if (streak === 0) {
+      streak = 1;
+      localStorage.setItem("ks_streak", "1");
+      localStorage.setItem("ks_last_visit", todayKey);
+    }
+
+    const label = streak === 1 ? "day 001" : "day " + String(streak).padStart(3, "0");
+    document.getElementById("streakLabel").textContent = label;
+  })();
+
+  // ---- toggles ----
+  const qaToggle = document.getElementById("qaToggle");
+  const qaBody = document.getElementById("qaBody");
+  qaToggle.addEventListener("click", () => {
+    const open = qaBody.classList.toggle("open");
+    qaToggle.setAttribute("aria-expanded", String(open));
+  });
+
+  const drillToggle = document.getElementById("drillToggle");
+  const drillBody = document.getElementById("drillBody");
+  if (drillToggle) {
+    drillToggle.addEventListener("click", () => {
+      drillBody.classList.toggle("open");
+    });
+  }
+
+  // ---- service worker for offline ----
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
